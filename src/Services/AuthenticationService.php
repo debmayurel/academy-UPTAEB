@@ -47,4 +47,11 @@ class AuthenticationService
     {
         return $this->sessionManager->get(self::SESSION_USER_KEY);
     }
+
+    public function refreshAuthenticatedUser(string $email): void
+    {
+        if ($this->isAuthenticated()) {
+            $this->sessionManager->set(self::SESSION_USER_KEY, strtolower(trim($email)));
+        }
+    }
 }

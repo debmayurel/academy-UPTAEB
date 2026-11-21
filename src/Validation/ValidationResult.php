@@ -8,11 +8,17 @@ class ValidationResult implements ValidationResultInterface
 {
     private bool $isValid;
     private string $errorMessage;
+    /** @var array<string, string> */
+    private array $errors;
 
-    private function __construct(bool $isValid, string $errorMessage = '')
+    /**
+     * @param array<string, string> $errors
+     */
+    private function __construct(bool $isValid, string $errorMessage = '', array $errors = [])
     {
         $this->isValid = $isValid;
         $this->errorMessage = $errorMessage;
+        $this->errors = $errors;
     }
 
     public static function success(): self
@@ -20,9 +26,26 @@ class ValidationResult implements ValidationResultInterface
         return new self(true);
     }
 
-    public static function failure(string $errorMessage): self
+    /**
+     * @param array<string, string> $errors
+     */
+    public static function failure(string $errorMessage, array $errors = []): self
     {
-        return new self(false, $errorMessage);
+        return new self(false, $errorMessage, $errors);
+    }
+
+    /**
+     * @param array<string, string> $errors
+     */
+    public static function fromErrors(array $errors): self
+    {
+        if ($errors === []) {
+            return self::success();
+        }
+
+        $firstMessage = reset($errors);
+
+        return new self(false, is_string($firstMessage) ? $firstMessage : 'Error de validación.', $errors);
     }
 
     public function isValid(): bool
@@ -33,5 +56,13 @@ class ValidationResult implements ValidationResultInterface
     public function getErrorMessage(): string
     {
         return $this->errorMessage;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 }

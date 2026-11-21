@@ -9,27 +9,20 @@ class LoginInputValidator implements LoginValidatorInterface
 {
     public function validate(array $inputData): ValidationResultInterface
     {
-        $email = trim((string)($inputData['email'] ?? ''));
-        $password = trim((string)($inputData['password'] ?? ''));
+        $errors = [];
+        $email = trim((string) ($inputData['email'] ?? ''));
+        $password = (string) ($inputData['password'] ?? '');
 
-        if ($this->hasEmptyFields($email, $password)) {
-            return ValidationResult::failure('Debes llenar todos los campos.');
+        if ($email === '') {
+            $errors['email'] = 'El correo es obligatorio.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'El formato del correo no es válido.';
         }
 
-        if ($this->isInvalidEmailFormat($email)) {
-            return ValidationResult::failure('El correo no es válido.');
+        if (trim($password) === '') {
+            $errors['password'] = 'La contraseña es obligatoria.';
         }
 
-        return ValidationResult::success();
-    }
-
-    private function hasEmptyFields(string $email, string $password): bool
-    {
-        return $email === '' || $password === '';
-    }
-
-    private function isInvalidEmailFormat(string $email): bool
-    {
-        return !filter_var($email, FILTER_VALIDATE_EMAIL);
+        return ValidationResult::fromErrors($errors);
     }
 }

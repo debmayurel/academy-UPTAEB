@@ -18,15 +18,31 @@ if ($schema === false) {
 
 $pdo->exec($schema);
 
+// Ensure `name` column exists on pre-existing SQLite databases
+if ($driver === 'sqlite') {
+    $columns = $pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC);
+    $hasName = false;
+    foreach ($columns as $col) {
+        if (($col['name'] ?? '') === 'name') {
+            $hasName = true;
+            break;
+        }
+    }
+    if (!$hasName) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT 'Administrador'");
+    }
+}
+
 $email = 'admin@beba.com';
 $findUser = $pdo->prepare('SELECT 1 FROM users WHERE email = :email');
 $findUser->execute(['email' => $email]);
 
 if ($findUser->fetchColumn() === false) {
     $seedUser = $pdo->prepare(
-        'INSERT INTO users (email, password_hash) VALUES (:email, :password_hash)'
+        'INSERT INTO users (name, email, password_hash) VALUES (:name, :email, :password_hash)'
     );
     $seedUser->execute([
+        'name' => 'Administrador',
         'email' => $email,
         'password_hash' => password_hash('123456', PASSWORD_DEFAULT),
     ]);
